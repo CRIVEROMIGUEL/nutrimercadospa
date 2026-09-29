@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nutrimercado-v2';
+const CACHE_NAME = 'nutrimercado-v3';
 const ASSETS = [
   './',
   './index.html',
