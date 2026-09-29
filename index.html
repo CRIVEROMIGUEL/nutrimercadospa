@@ -252,6 +252,49 @@ function getAudioCtx() {
   return audioCtx;
 }
 
+// Los navegadores móviles (sobre todo iOS) bloquean el audio hasta que hay
+// un gesto directo del usuario. Desbloqueamos el contexto en la primera
+// interacción y cargamos los clips como buffers de Web Audio, que sí
+// reproducen de forma confiable en celular.
+let audioUnlocked = false;
+function unlockAudio() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  const ctx = getAudioCtx();
+  const buffer = ctx.createBuffer(1, 1, 22050);
+  const src = ctx.createBufferSource();
+  src.buffer = buffer;
+  src.connect(ctx.destination);
+  src.start(0);
+}
+['touchstart', 'mousedown', 'keydown'].forEach((evt) => {
+  document.addEventListener(evt, unlockAudio, { once: true, passive: true });
+});
+
+const soundBuffers = {};
+function loadSoundBuffer(name, url) {
+  fetch(url)
+    .then((res) => res.arrayBuffer())
+    .then((data) => getAudioCtx().decodeAudioData(data))
+    .then((buffer) => { soundBuffers[name] = buffer; })
+    .catch(() => {});
+}
+loadSoundBuffer('bip', 'sounds/otter-bip.mp3');
+loadSoundBuffer('complete', 'sounds/otter-complete.mp3');
+
+function playBuffer(name, gainValue) {
+  const buffer = soundBuffers[name];
+  const ctx = getAudioCtx();
+  if (!buffer) return;
+  const src = ctx.createBufferSource();
+  const gain = ctx.createGain();
+  gain.gain.value = gainValue != null ? gainValue : 1;
+  src.buffer = buffer;
+  src.connect(gain);
+  gain.connect(ctx.destination);
+  src.start(0);
+}
+
 function playTone(freq, start, duration, type, peakGain) {
   const ctx = getAudioCtx();
   const osc = ctx.createOscillator();
@@ -268,21 +311,14 @@ function playTone(freq, start, duration, type, peakGain) {
   osc.stop(t0 + duration + 0.02);
 }
 
-const otterBipSrc = new Audio('sounds/otter-bip.mp3');
-const otterCompleteSrc = new Audio('sounds/otter-complete.mp3');
-otterBipSrc.preload = 'auto';
-otterCompleteSrc.preload = 'auto';
-
 function playOtterBip() {
-  const a = otterBipSrc.cloneNode(true);
-  a.volume = 0.9;
-  a.play().catch(() => {});
+  getAudioCtx();
+  playBuffer('bip', 0.9);
 }
 
 function playOtterComplete() {
-  const a = otterCompleteSrc.cloneNode(true);
-  a.volume = 1;
-  a.play().catch(() => {});
+  getAudioCtx();
+  playBuffer('complete', 1);
 }
 
 function playTap() {
