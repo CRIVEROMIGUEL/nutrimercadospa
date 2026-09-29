@@ -268,8 +268,25 @@ function playTone(freq, start, duration, type, peakGain) {
   osc.stop(t0 + duration + 0.02);
 }
 
+const otterBipSrc = new Audio('sounds/otter-bip.mp3');
+const otterCompleteSrc = new Audio('sounds/otter-complete.mp3');
+otterBipSrc.preload = 'auto';
+otterCompleteSrc.preload = 'auto';
+
+function playOtterBip() {
+  const a = otterBipSrc.cloneNode(true);
+  a.volume = 0.9;
+  a.play().catch(() => {});
+}
+
+function playOtterComplete() {
+  const a = otterCompleteSrc.cloneNode(true);
+  a.volume = 1;
+  a.play().catch(() => {});
+}
+
 function playTap() {
-  playTone(620, 0, 0.08, 'sine', 0.15);
+  playOtterBip();
 }
 
 function playAdd() {
@@ -282,8 +299,7 @@ function playDelete() {
 }
 
 function playComplete() {
-  const notes = [523, 659, 784, 1047];
-  notes.forEach((f, i) => playTone(f, i * 0.11, 0.22, 'sine', 0.16));
+  playOtterComplete();
 }
 
 function save() {
@@ -308,13 +324,11 @@ function render() {
     check.className = 'check' + (item.done ? ' done' : '');
     check.innerHTML = item.done ? '&#10003;' : '';
     check.onclick = () => {
-      items[idx].done = !items[idx].done;
+      const nowDone = !items[idx].done;
+      items[idx].done = nowDone;
       save();
       render();
-      const stillPending = items.filter(i => !i.done).length;
-      if (items[idx] && items[idx].done && items.length > 0 && stillPending === 0) {
-        playComplete();
-      } else {
+      if (nowDone) {
         playTap();
       }
     };
@@ -354,7 +368,7 @@ document.getElementById('clear-btn').addEventListener('click', () => {
   items = items.filter(i => !i.done);
   save();
   render();
-  playDelete();
+  playOtterComplete();
 });
 
 render();

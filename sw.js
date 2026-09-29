@@ -1,10 +1,12 @@
-const CACHE_NAME = 'nutrimercado-v1';
+const CACHE_NAME = 'nutrimercado-v2';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icons/icon-512.png',
+  './sounds/otter-bip.mp3',
+  './sounds/otter-complete.mp3'
 ];
 
 self.addEventListener('install', (event) => {
